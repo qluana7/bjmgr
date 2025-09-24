@@ -68,11 +68,11 @@ public:
     inline static void split(const std::string& src, std::vector<std::string>& dest, char delim)
     { std::stringstream ss(src); for (std::string s; std::getline(ss, s, delim); dest.push_back(s)); }
 
-    template <typename _OutT, typename _UnaryOperation>
+    template <typename OutT, typename UnaryOp>
     [[ deprecated ]]
-    inline static std::vector<_OutT> split_map(const std::string& __src, _UnaryOperation __unary_op, char __delim) {
+    inline static std::vector<OutT> split_map(const std::string& __src, UnaryOp __unary_op, char __delim) {
         std::stringstream ss(__src);
-        std::vector<_OutT> v;
+        std::vector<OutT> v;
         std::string s;
 
         while (std::getline(ss, s, __delim))
@@ -93,8 +93,8 @@ public:
         return ct;
     }
 
-    template <typename _Container, typename _UnaryOp>
-    inline static _Container split_map(const std::string& __src, char __delim, _UnaryOp __unary_op) {
+    template <typename _Container, typename UnaryOp>
+    inline static _Container split_map(const std::string& __src, char __delim, UnaryOp __unary_op) {
         std::stringstream ss(__src);
         _Container ct; auto iter = std::back_inserter(ct);
         std::string s;
@@ -105,8 +105,8 @@ public:
         return ct;
     }
 
-    template <typename _UnaryFunc>
-    inline static void split_foreach(const std::string& __src, char __delim, _UnaryFunc __unary_func) {
+    template <typename UnaryFunc>
+    inline static void split_foreach(const std::string& __src, char __delim, UnaryFunc __unary_func) {
         std::stringstream ss(__src);
         std::string s;
 
@@ -115,8 +115,8 @@ public:
     }
 
     // Remove character if predict return false.
-    template <typename _UnaryPred>
-    inline static std::string strrmv(const std::string& __src, _UnaryPred __unary_pred) {
+    template <typename Predict>
+    inline static std::string strrmv(const std::string& __src, Predict __unary_pred) {
         std::string r; r.resize(__src.size());
 
         std::size_t i = 0;

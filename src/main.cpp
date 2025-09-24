@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <map>
+#include <unordered_set>
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -44,66 +45,90 @@ problem_t get_problem(i32 n);
 
 static std::unordered_map<std::string, std::string> help_table {
     { "info",
-COLORED_USAGE ": " APP_NAME " info [options]"                                    "\n"
-""                                                                              "\n"
-"  Collects problems by difficulty according to the specified folder structure" "\n"
-"  and displays the results."                                                   "\n"
-""                                                                              "\n"
-COLORED_MENU("Options")                                                         "\n"
-"  --search <tier>    -s : filter information by tier"                          "\n"
-"    tier : <B | S | G | P | D | R>[1 - 5]"                                     "\n"
-"  --dir <path>       -d : set working directory"                               "\n"
-""                                                                              "\n"
-COLORED_MENU("Examples")                                                        "\n"
-"  " APP_NAME " info                get all information"                        "\n"
-"  " APP_NAME " info --search s1    get s1 tier's information"                  "\n"
-"  " APP_NAME " info -s b3..s1      get information from b3 to s1 tier"         "\n"
-"  " APP_NAME " info -s d           get information from d5 to d1 tier"         "\n"
-"  " APP_NAME " info -s b3..        get information above b3 tier"              "\n"
-"  " APP_NAME " info -s ..p2        get information below p2 tier"              "\n"
+    COLORED_USAGE ": " APP_NAME " info [options]"                                    "\n"
+    ""                                                                              "\n"
+    "  Collects problems by difficulty according to the specified folder structure" "\n"
+    "  and displays the results."                                                   "\n"
+    ""                                                                              "\n"
+    COLORED_MENU("Options")                                                         "\n"
+    "  --search <tier>    -s : filter information by tier"                          "\n"
+    "  --dir <path>       -d : set working directory"                               "\n"
+    ""                                                                              "\n"
+    COLORED_MENU("Examples")                                                        "\n"
+    "  " APP_NAME " info                get all information"                        "\n"
+    "  " APP_NAME " info --search s1    get s1 tier's information"                  "\n"
+    "  " APP_NAME " info -s b3..s1      get information from b3 to s1 tier"         "\n"
+    "  " APP_NAME " info -s d           get information from d5 to d1 tier"         "\n"
+    "  " APP_NAME " info -s b3..        get information above b3 tier"              "\n"
+    "  " APP_NAME " info -s ..p2        get information below p2 tier"              "\n"
     },
     { "patch", 
-COLORED_USAGE ": " APP_NAME " patch [options]"      "\n"
-""                                                  "\n"
-"  Fetches tiers from solved.ac and moves files"    "\n"
-"  to the correct directory."                       "\n"
-""                                                  "\n"
-COLORED_MENU("Options")                             "\n"
-"  --log <path>      -l : set log output file."     "\n"
-"  --dir <path>      -d : set working directory."   "\n"
-"  --yes             -y : skip confirmation."       "\n"
-""                                                  "\n"
-COLORED_MENU("Examples")                            "\n"
-"  " APP_NAME " patch"                              "\n"
-"  " APP_NAME " patch --cache \"../cache\""         "\n"
-"  " APP_NAME " patch -c\"../cache/p1.txt\""        "\n"
-"  " APP_NAME " patch -l\"./log.txt\""              "\n"
+    COLORED_USAGE ": " APP_NAME " patch [options]"      "\n"
+    ""                                                  "\n"
+    "  Fetches tiers from solved.ac and moves files"    "\n"
+    "  to the correct directory."                       "\n"
+    ""                                                  "\n"
+    COLORED_MENU("Options")                             "\n"
+    "  --log <path>      -l : set log output file."     "\n"
+    "  --dir <path>      -d : set working directory."   "\n"
+    "  --yes             -y : skip confirmation."       "\n"
+    ""                                                  "\n"
+    COLORED_MENU("Examples")                            "\n"
+    "  " APP_NAME " patch"                              "\n"
+    "  " APP_NAME " patch --cache \"../cache\""         "\n"
+    "  " APP_NAME " patch -c\"../cache/p1.txt\""        "\n"
+    "  " APP_NAME " patch -l\"./log.txt\""              "\n"
     },
     { "get",
-COLORED_USAGE ": " APP_NAME " get <problem-id>"                                     "\n"
-""                                                                                  "\n"
-"  Gets information from solved.ac with the problem id."                            "\n"
-""                                                                                  "\n"
-COLORED_MENU("Examples")                                                            "\n"
-"  " APP_NAME " get 1000"                                                           "\n"
-"  " APP_NAME " get 11440"                                                          "\n"
+    COLORED_USAGE ": " APP_NAME " get <problem-id>"                                     "\n"
+    ""                                                                                  "\n"
+    "  Gets information from solved.ac with the problem id."                            "\n"
+    ""                                                                                  "\n"
+    COLORED_MENU("Required")                                                            "\n"
+    "  <problem-id>         : problem id (required)"                                   "\n"
+    ""                                                                                  "\n"
+    COLORED_MENU("Examples")                                                            "\n"
+    "  " APP_NAME " get 1000"                                                           "\n"
+    "  " APP_NAME " get 11440"                                                          "\n"
     },
     { "new",
-COLORED_USAGE ": " APP_NAME " new <problem-id> [options]"                    "\n"
-""                                                                           "\n"
-"  Fetches the tier from solved.ac"                                          "\n"
-"  and creates a new file in the corresponding tier folder."                 "\n"
-""                                                                           "\n"
-COLORED_MENU("Options")                                                      "\n"
-"  --dir <path>      -d : set working directory."                            "\n"
-"  --tier <tier>     -t : force tier (do not fetch from solved.ac)."         "\n"
-"  --extension <ext> -x : set file extension (default is cpp)."              "\n"
-"  --yes             -y : skip confirmation."                                "\n"
-"  --code            -c : open file with code. " COLOR(160) "(unsafe)" RESET "\n"
-""                                                                           "\n"
-COLORED_MENU("Examples")                                                     "\n"
-"  " APP_NAME " new 1000"                                                    "\n"
-"  " APP_NAME " new 3024 -d../ -tD3 -xcpp"                                   "\n"
+    COLORED_USAGE ": " APP_NAME " new <problem-id> [options]"                    "\n"
+    ""                                                                           "\n"
+    "  Fetches the tier from solved.ac"                                          "\n"
+    "  and creates a new file in the corresponding tier folder."                 "\n"
+    ""                                                                           "\n"
+    COLORED_MENU("Required")                                                     "\n"
+    "  <problem-id>         : problem id (required)"                             "\n"
+    ""                                                                           "\n"
+    COLORED_MENU("Options")                                                      "\n"
+    "  --dir <path>      -d : set working directory."                            "\n"
+    "  --tier <tier>     -t : force tier (do not fetch from solved.ac)."         "\n"
+    "  --extension <ext> -x : set file extension (default is cpp)."              "\n"
+    "  --yes             -y : skip confirmation."                                "\n"
+    "  --code            -c : open file with code. " COLOR(160) "(unsafe)" RESET "\n"
+    ""                                                                           "\n"
+    COLORED_MENU("Examples")                                                     "\n"
+    "  " APP_NAME " new 1000"                                                    "\n"
+    "  " APP_NAME " new 3024 -d../ -tD3 -xcpp"                                   "\n"
+        },
+        { "update",
+    COLORED_USAGE ": " APP_NAME " update <username> [options]"                    "\n"
+    ""                                                                            "\n"
+    "  Gets all solved problems of the user from solved.ac"                       "\n"
+    "  and create all the files that are solved but not in the directory."        "\n"
+    ""                                                                            "\n"
+    COLORED_MENU("Options")                                                       "\n"
+    "  --log <path>      -l : set log output file."                               "\n"
+    "  --dir <path>      -d : set working directory."                             "\n"
+    "  --filter <tier>   -f : filter by tier."                                    "\n"
+    "  --extension <ext> -x : set file extension (default is cpp)."               "\n"
+    "  --yes             -y : skip confirmation."                                 "\n"
+    "  --code            -c : open files with code. " COLOR(160) "(unsafe)" RESET "\n"
+    ""                                                                            "\n"
+    COLORED_MENU("Examples")                                                      "\n"
+    "  " APP_NAME " update solvedac"                                              "\n"
+    "  " APP_NAME " update solvedac -d../"                                        "\n"
+    "  " APP_NAME " update solvedac --log \"./log.txt\""                          "\n"
     }
 };
 
@@ -112,6 +137,7 @@ static std::unordered_map<std::string, std::string> short_desc {
     { "patch", "Updates tier and moves files to the correct directory." },
     { "get", "Gets tier information with problem id" },
     { "new", "Create new file with tier" },
+    { "update", "Updates source code that are solved but not in the directory." },
     { "help", "Show help" }
 };
 
@@ -133,6 +159,14 @@ static std::unordered_map<std::string, std::vector<opt_t>> opt_table {
         { "extension", true, 'x' },
         { "yes", false, 'y' },
         { "code", false, 'c' }
+    } },
+    { "update", {
+        { "log", true, 'l' },
+        { "dir", true, 'd' },
+        { "filter", true, 'f' },
+        { "extension", true, 'x' },
+        { "yes", false, 'y' },
+        { "code", false, 'c' }
     } }
 };
 
@@ -141,7 +175,8 @@ static std::unordered_map<std::string, i32> tables {
     { "info", 1 },
     { "patch", 2 },
     { "get", 3 },
-    { "new", 4 }
+    { "new", 4 },
+    { "update", 5 }
 };
 
 inline std::string rgb_color(int r, int g, int b) {
@@ -242,51 +277,19 @@ void info(const args& arg) {
     i32 c = 0;
     std::stringstream ss;
 
-    i32 s = 0, e = 30;
+    tier_range rng;
     
     if (arg.options.count("search")) {
         const std::string& st = arg.options.at("search").value.value();
-        size_t pos = st.find("..");
-        if (pos != std::string::npos) {
-            std::string
-                s1 = st.substr(0, pos),
-                s2 = st.substr(pos + 2);
-            
-            if (s1.size() > 2 || s2.size() > 2) {
-                help(arg, "info", true, "Invalid tier range");
-                exit(1);
-            }
+        rng = tier_range(st);
 
-            if (s1.size() == 1) s1 += "5";
-            if (s2.size() == 1) s2 += "1";
-            tier_t t1(s1), t2(s2);
-
-            if (!t1.valid() || !t2.valid()) {
-                help(arg, "info", true, "Invalid tier range");
-                exit(1);
-            }
-
-            if (!s1.empty()) s = (i32)t1;
-            if (!s2.empty()) e = (i32)t2;
-        } else {
-            std::string s1, s2;
-
-            if (st.size() == 1) {
-                s1 = st + "5";
-                s2 = st + "1";
-            } else s1 = s2 = st;
-
-            tier_t t1(s1), t2(s2);
-            
-            if (!t1.valid() || !t2.valid()) {
-                help(arg, "info", true, "Invalid tier range");
-                exit(1);
-            }
-
-            s = (i32)t1;
-            e = (i32)t2;
+        if (!rng.valid) {
+            help(arg, "info", true, "Invalid tier range '" + st + "'");
+            exit(1);
         }
     }
+
+    i32 s = (i32)rng.start, e = (i32)rng.end;
 
     for (i32 i = s; i <= e; i++) {
         if (ps[i].empty()) continue;
@@ -638,6 +641,293 @@ void new_file(const args& arg) {
         std::cout << "Open file with 'code -r " << p.string() << "'\n";
 }
 
+void update(const args& arg) {
+    std::cout << "\n";
+
+    if (arg.args.empty()) {
+        help(arg, "list", true, "Missing username");
+        exit(1);
+    }
+    
+    fs::path f_log = arg.options.count("log") ? fs::path(arg.options.at("log").value.value()) : fs::path("log.txt");
+
+    if (fs::exists(f_log) && !arg.options.count("yes")) {
+        std::cout << "'" << f_log.string() << "': File already exists. Overwrite? [y/N] ";
+
+        i32 r = getch(true);
+        std::cout << std::endl;
+
+        if (r != 'y' && r != 'Y') {
+            std::cout << "\nPatch canceled by user.\n";
+            exit(1);
+        }
+    }
+
+    tier_range rng;
+
+    if (arg.options.count("filter")) {
+        const std::string& st = arg.options.at("filter").value.value();
+        rng = tier_range(st);
+
+        if (!rng.valid) {
+            help(arg, "update", true, "Invalid tier range '" + st + "'");
+            exit(1);
+        }
+    }
+
+    std::ofstream lgout(f_log);
+
+    lgout << std::chrono::system_clock::now() << "\n\n";
+
+    fs::path dir = arg.options.count("dir") ? fs::path(arg.options.at("dir").value.value()) : fs::path(".");
+    std::vector<std::vector<i32>> ps(32);
+    std::vector<std::pair<i32, tier_t>> odat;
+    std::map<i32, tier_t> ndat;
+    get_list(ps, dir);
+
+    for (i32 i = 1; i <= 30; i++) {
+        for (auto x : ps[i]) {
+            odat.emplace_back(x, tier_t(i));
+        }
+    }
+
+    sort(odat.begin(), odat.end(), [] (const auto& a, const auto& b) {
+        bool r = a.second < b.second;
+        if (a.second == b.second) r = a.first < b.first;
+        return r;
+    });
+
+    const auto url = BASE_URL "search/problem?query=s@" + arg.args[0];
+    CURL* curl = curl_easy_init();
+
+    if (curl) {
+        std::cout << "Fetching data from solved.ac... 0%" << std::flush;
+    
+        std::string buf;
+
+        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buf);
+
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        CURLcode req = curl_easy_perform(curl);
+
+        if (req != CURLE_OK) {
+            std::cerr << COLORED_ERROR ": " << curl_easy_strerror(req);
+            exit(1);
+        }
+
+        long sc; curl_easy_getinfo(curl, CURLINFO_HTTP_CODE, &sc);
+
+        if (sc != 200) {
+            std::cerr <<
+                COLORED_ERROR ": Error while fetching data\n"
+                "Check your network connection or try again later.\n\n"
+                "Check log file for more information.\n";
+                
+            lgout <<
+                "/* Debug Informations */" "\n"
+                "HTTP Status Code : " << sc << "\n"
+                "Response : \n" << buf << "\n"
+                "/* End of Debug Informations */" "\n";
+            exit(1);
+        }
+
+        auto _res = json::parse(buf);
+
+        i32 size = _res["count"].get<i32>();
+
+        for (i32 i = 0, len = size / 50 + !!(size % 50); i < len; i++) {
+            std::string s = url + "&page=" + std::to_string(i + 1);
+            curl_easy_setopt(curl, CURLOPT_URL, s.c_str());
+
+            buf = "";
+
+            CURLcode req = curl_easy_perform(curl);
+
+            if (req != CURLE_OK) {
+                std::cerr << COLORED_ERROR ": " << curl_easy_strerror(req);
+                exit(1);
+            }
+
+            long sc; curl_easy_getinfo(curl, CURLINFO_HTTP_CODE, &sc);
+
+            if (sc != 200) {
+                std::cerr <<
+                    COLORED_ERROR ": Error while fetching data\n"
+                    "Check your network connection or try again later.\n\n"
+                    "Check log file for more information.\n";
+                
+                lgout <<
+                    "/* Debug Informations */" "\n"
+                    "HTTP Status Code : " << sc << "\n"
+                    "Response : \n" << buf << "\n"
+                    "/* End of Debug Informations */" "\n";
+                exit(1);
+            }
+
+            nlohmann::json res;
+
+            try {
+                res = json::parse(buf);
+            } catch (...) {
+                std::cerr << COLORED_ERROR "Error while parsing data\n";
+                lgout <<
+                    "/* Debug Informations */" "\n"
+                    "Response : \n" << buf << "\n"
+                    "/* End of Debug Informations */" "\n";
+                exit(1);
+            }
+
+
+            for (auto& it : res["items"]) {
+                auto pid = it["problemId"].get<i32>();
+                auto lv = tier_t(it["level"].get<i32>());
+                ndat[pid] = lv;
+                auto [_r, _g, _b] = lv.color();
+                lgout <<
+                    "Data fetched : " << pid <<
+                    " => " << rgb_color(_r, _g, _b) <<
+                    lv.long_name() << RESET << "\n";
+            }
+
+            lgout.flush();
+
+            buf.clear();
+
+            std::cout << "\rFetching data from solved.ac... " << (i32)(i * 1.L / len * 100) << "%" << std::flush;
+        }
+
+        curl_easy_cleanup(curl);
+    } else {
+        std::cerr << COLORED_ERROR ": Error while initializing CURL\n";
+        exit(1);
+    }
+
+    std::cout << "\rFetching data from solved.ac... Done.\n" << std::flush;
+
+    i32 cnts = 0;
+    std::unordered_set<i32> s;
+    std::map<i32, tier_t> filt;
+
+    for (auto [id, t] : odat)
+        s.insert(id);
+    
+    for (auto [id, t] : ndat) {
+        auto [_r, _g, _b] = t.color();
+
+        lgout << "[" << rgb_color(_r, _g, _b) << t.long_name() << RESET "] " << id << " : ";
+
+        if (s.count(id))
+            lgout << COLOR(46) "✔" RESET "\n";
+        else {
+            cnts++;
+
+            if (rng.contains(t))
+                filt[id] = t;
+
+            lgout << COLOR(160) "✘" RESET "\n";
+        }
+    }
+
+    lgout.flush();
+
+    std::cout
+        << "\n[" COLORED_TEXT(219, "Result") "]\n"
+        << COLORED_TEXT(46, "Solved") " : " << ndat.size() << "\n"
+        << COLORED_TEXT(45, "Cached") " : " << odat.size() << "\n"
+        << COLORED_TEXT(208, "Not in directory") " : " << cnts << "\n"
+        << COLORED_TEXT(27, "Filtered") " : " << filt.size() << "\n\n";
+    
+    if (filt.size() == 0) {
+        std::cout << "Nothing to update.\n";
+        return;
+    }
+
+    if (!arg.options.count("yes")) {
+        std::cout << "Do you want to view update list? [y/N] ";
+
+        i32 r = getch(true);
+        std::cout << std::endl;
+
+        if (r == 'y' || r == 'Y') {
+            fs::path tmp = fs::temp_directory_path() / "bjmgr_update_list.txt";
+            std::ofstream out(tmp);
+            
+            for (auto& [id, t] : filt) {
+                auto [_r, _g, _b] = t.color();
+                out << id << " : " << rgb_color(_r, _g, _b) << t.long_name() << RESET << "\n";
+            }
+            out.close();
+
+            [[maybe_unused]]
+            int _r = system(("less " + tmp.string()).c_str());
+
+            fs::remove(tmp);
+        }
+    }
+
+    if (!arg.options.count("yes")) {
+        std::cout << "Proceed to update? [y/N] ";
+
+        i32 r = getch(true);
+        std::cout << std::endl;
+
+        if (r != 'y' && r != 'Y') {
+            std::cout << "\nupdate canceled by user.\n";
+            exit(1);
+        }
+    }
+
+    std::cout << "\n";
+
+    std::string fext = arg.options.count("extension") ? *arg.options.at("extension").value : "cpp";
+
+    i32 i = 1;
+
+    for (auto& [id, t] : filt) {
+        std::cout << "\rupdating files... " << i << " / " << filt.size() << std::flush;
+        fs::path p(dir / t.path() / (std::to_string(id) + "." + fext));
+
+        std::ofstream(p).close();
+
+        lgout << "File created : " << p.string() << "\n";
+
+        if (arg.options.count("code"))
+            [[maybe_unused]]
+            int _r = system(("code -r \'" + p.string() + "'").c_str());
+
+        std::cout << " [ next(n), skip(s), quit(q) ]" << std::flush;
+        
+        while (true) {
+            i32 _inp = getch(false);
+        
+            switch (_inp) {
+                case 'n': case 'N':
+                    break;
+                case 's': case 'S':
+                    lgout << "File skipped : " << p.string() << "\n";
+                    fs::remove(p);
+                    break;
+                case 'q': case 'Q':
+                    lgout << "Update canceled by user.\n";
+                    std::cout << "\n\nUpdate canceled by user.\n";
+                    lgout.flush();
+                    return;
+                default:
+                    continue;
+            }
+
+            break;
+        }
+
+        i++;
+    }
+
+    std::cout << "\r" << std::string(60, ' ') << std::flush;
+    std::cout << "\rupdating files... Done.\n\n";
+}
+
 int main(int argc, char** argv) {
     std::cout << COLORED_APP_NAME " " APP_VERSION "\n";
     args c;
@@ -662,7 +952,7 @@ int main(int argc, char** argv) {
 
     if (!t) help(c, cmd);
     else ((std::vector<void (*)(const args&)>) {
-        nullptr, info, patch, get, new_file
+        nullptr, info, patch, get, new_file, update
     })[t](c);
     
     return 0;

@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.21)
 
 project(bjmgr
-    VERSION 1.0.0
-    DESCRIPTION "Baekjoon Manager"
+    VERSION 1.1.0
+    DESCRIPTION "Local source code manager for Baekjoon Online Judge with solved.ac"
     LANGUAGES CXX
 )
 
@@ -15,8 +15,6 @@ add_compile_definitions(APP_VERSION="${PROJECT_VERSION}")
 if(NOT DISABLE_ANSI)
 add_compile_definitions(ANSI_ENABLED=1)
 endif()
-
-set(CMAKE_CXX_FLAGS_DEBUG_INIT "-g")
 
 add_compile_options(-Wall -std=c++17)
 

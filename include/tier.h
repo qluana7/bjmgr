@@ -123,3 +123,72 @@ public:
         return k * 5 + (5 - this->level) + 1;
     }
 };
+
+struct tier_range {
+    tier_t start = tier_t(0), end = tier_t(30);
+    bool valid = false;
+
+    tier_range() = default;
+    tier_range(const tier_range&) = default;
+    tier_range(tier_range&&) = default;
+
+    tier_range(const tier_t& s, const tier_t& e)
+    : start(s), end(e), valid(s.valid() && e.valid()) { }
+    tier_range(const std::string& se) {
+        auto pos = se.find("..");
+        if (pos == std::string::npos) {
+            std::string s1, s2;
+
+            if (se.size() == 1) {
+                s1 = se + "5";
+                s2 = se + "1";
+            } else s1 = s2 = se;
+
+            tier_t t1(s1), t2(s2);
+            
+            valid = t1.valid() && t2.valid();
+
+            start = t1;
+            end = t2;
+        } else {
+            std::string
+                s1 = se.substr(0, pos),
+                s2 = se.substr(pos + 2);
+
+            if (s1.size() > 2 || s2.size() > 2) {
+                valid = false;
+                return;
+            }
+            
+            if (s1.size() == 1) s1 += "5";
+            if (s2.size() == 1) s2 += "1";
+
+            tier_t t1 = tier_t(s1), t2 = tier_t(s2);
+
+            valid = t1.valid() && t2.valid();
+
+            if (!s1.empty()) start = (i32)t1;
+            if (!s2.empty()) end = (i32)t2;
+        }
+    }
+
+    bool contains(const tier_t& t) const {
+        if (!valid || !t.valid()) return false;
+
+        return start <= t && t <= end;
+    }
+
+    tier_range& operator=(const tier_range& r) {
+        this->start = r.start;
+        this->end = r.end;
+        this->valid = r.valid;
+        return *this;
+    }
+
+    tier_range& operator=(tier_range&& r) {
+        this->start = r.start;
+        this->end = r.end;
+        this->valid = r.valid;
+        return *this;
+    }
+};
