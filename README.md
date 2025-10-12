@@ -1,71 +1,70 @@
-<div id="toc">
-  <ul style="list-style: none;" align="center">
-    <summary>
-      <h1> bjmgr </h1>
-    </summary>
-  </ul>
-</div>
+# bjmgr
 
-<p align="center"><i>Baekjoon source code manager with solved.ac tier</i></p>
+Baekjoon source code manager with solved.ac tier
+
+- Language: C++17 · Build: CMake · License: MIT  
+- Integrations: solved.ac API v3, libcurl, nlohmann_json  
+- Optional: less, Visual Studio Code (`code` CLI)
+
+## Index
+
+- [Overview](#overview)
+- [Quick Start](#quick-start)
+- [Requirements](#requirements)
+- [Directory Structure](#directory-structure)
+- [CLI Reference](#cli-reference)
+- [Installation](#installation)
+- [Troubleshooting](#troubleshooting)
+- [Notes on Security and Portability](#notes-on-security-and-portability)
+- [Roadmap](#roadmap)
+- [Contributing](#contributing)
+- [License](#license)
 
 ## Overview
 
-**bjmgr** is a utility for managing your Baekjoon Online Judge (BOJ) solutions, organizing them according to their solved.ac tier. It helps keep your codebase neat and allows you to easily track your progress and performance across different problem difficulties.
+bjmgr is a CLI tool that organizes your Baekjoon Online Judge (BOJ) solutions by their solved.ac tier/level.
 
-Written primarily in C++, bjmgr is designed for users who regularly solve BOJ problems and want a streamlined way to store and access their source code.
+- Auto-create and place solution files under tier/level folders (e.g., `Gold/Gold 5/1000.cpp`)
+- Summarize local inventory by tier; filter by tier range
+- Patch/sync files to updated tiers from solved.ac
+- Optional integration with VS Code (`--code`)
+- Note: Inventory scan currently counts only `.cpp` files
+- Today it is C++-centric, but broader language support is planned (see Roadmap)
 
-## Features
-
-- **Tier-based organization**: Solutions are stored in directories named after solved.ac tiers (e.g., Bronze, Silver, Gold), with subdirectories for each tier level (e.g., Gold 5).
-- **Automatic file placement**: When managing code, files are placed in the correct tier and level directory.
-- **View patch files**: Uses the `less` pager (if installed) via the `system()` method for viewing diffs and patches.
-- **VSCode integration**: Some commands support the `code` operation to open or create files directly in Visual Studio Code (requires VSCode and its `code` command available in your PATH).
-- **Help command**: Lists all available commands and usage information.
-- **C++ support**: Primarily intended for C++ solutions.
-
-## System and External Dependencies
-
-- **C++ compiler:** A C++ compiler such as g++ or clang++ is required to build and use bjmgr.
-- **CMake:** Needed for building the project.
-- **External utilities:** Some features depend on external commands like `less` for viewing patch files. Make sure `less` is installed if you want to use related features.
-- **Visual Studio Code (Optional):** Commands that support the `code` operation require [Visual Studio Code](https://code.visualstudio.com/) and the `code` command available in your system's PATH. If VSCode or the `code` command is not installed, these features will not work, but the core functionality of bjmgr remains unaffected.
-- **system() method:** This project uses the standard C++ `system()` method to call external commands. Be aware of portability and security considerations when running bjmgr on different environments.
-
-## Getting Started
-
-### Prerequisites
-
-See the System and External Dependencies section.
-
-### Build
+## Quick Start
 
 ```bash
-git clone https://github.com/qluana7/bjmgr
-cd bjmgr
-
-# Use default Makefile generator
+# Build
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-make -C build
+cmake --build build --config Release
 
-# Use ninja for faster builds (optional)
-cmake -S . -B build -Gninja -DCMAKE_BUILD_TYPE=Release
-ninja -C build
+# Help
+./build/bjmgr help
+
+# Create a file in the correct tier folder
+./build/bjmgr new 1000
+
+# Summarize your solutions by tier
+./build/bjmgr info
+
+# Fetch a problem's tier/title/link
+./build/bjmgr get 11440
+
+# Move files to updated tiers from solved.ac (with logging)
+./build/bjmgr patch -l ./log.txt
 ```
 
-## Usage
+## Requirements
 
-To see available commands and usage instructions, run:
+- C++17 compiler, CMake ≥ 3.21  
+- libcurl, nlohmann_json (build-time)  
+- Optional: `less` (patch list), VS Code `code` CLI (`--code`)  
+- Network access for solved.ac API operations
 
-```bash
-./bjmgr help
-```
-
-This command will display all supported features and their usage.
-
-## Directory Structure Example
+## Directory Structure
 
 ```
-bjmgr/
+<workspace>/
 ├── Bronze/
 │   └── Bronze 3/
 │       └── 1001.cpp
@@ -78,21 +77,169 @@ bjmgr/
 ...
 ```
 
-## Roadmap / TODO
+Note: The inventory scanner currently includes `.cpp` files only.
 
-- Remove or refactor use of the `system()` method to improve portability and security.
-- Provide support for user-defined directory structures, allowing users to customize how solution files are organized.
-- Improve editor integration and support additional editors besides VSCode.
-- Add more flexible and portable patch/diff viewing capabilities not dependent on external utilities.
-- Additional enhancements and features planned for future releases.
+## CLI Reference
+
+<details>
+<summary>Click to expand</summary>
+
+### help
+- Show help text and list commands.
+```bash
+./bjmgr help
+./bjmgr help new
+```
+
+### info
+- Scan a directory and summarize inventory by tier/level.
+- Options:
+  - `--search, -s <tier-range>`: Filter by tier (e.g., `b3..s1`, `d`, `b3..`, `..p2`)
+  - `--dir, -d <path>`: Working directory (default: `.`)
+- Examples:
+```bash
+./bjmgr info
+./bjmgr info --search s1
+./bjmgr info -s b3..s1
+./bjmgr info -s ..p2 -d ./solutions
+```
+
+### get
+- Fetch problem info (tier, title, link) by problem ID.
+```bash
+./bjmgr get <problem-id>
+# examples
+./bjmgr get 1000
+./bjmgr get 11440
+```
+
+### new
+- Fetch the tier from solved.ac and create a file in the corresponding tier folder.
+- Required: `<problem-id>` (numeric)
+- Options:
+  - `--dir, -d <path>`: Working directory (default: `.`)
+  - `--tier, -t <tier>`: Force tier manually (skip solved.ac), e.g., `D3`
+  - `--extension, -x <ext>`: File extension (default: `cpp`)
+  - `--yes, -y`: Skip confirmation prompts
+  - `--code, -c`: Open created file in VS Code (uses `system()`)
+- Examples:
+```bash
+./bjmgr new 1000
+./bjmgr new 3024 -d ../ -t D3 -x cpp
+./bjmgr new 15829 -x cxx --code
+```
+
+### patch
+- Fetch current tiers from solved.ac and move files to correct tier directories (writes a log; optional patch list via `less`).
+- Options:
+  - `--log, -l <path>`: Log output file (default: `./log.txt`)
+  - `--dir, -d <path>`: Working directory (default: `.`)
+  - `--yes, -y`: Skip interactive confirmations
+- Examples:
+```bash
+./bjmgr patch
+./bjmgr patch --log ./log.txt -d ./solutions
+```
+
+### update
+- Fetch all solved problems for a solved.ac user and create any missing files (interactive).
+- Options:
+  - `--log, -l <path>`: Log file
+  - `--dir, -d <path>`: Working directory
+  - `--filter, -f <tier-range>`: Filter by tier range
+  - `--extension, -x <ext>`: File extension (default: `cpp`)
+  - `--yes, -y`: Skip confirmations
+  - `--code, -c`: Open created files in VS Code (uses `system()`)
+- Examples:
+```bash
+./bjmgr update solvedac
+./bjmgr update solvedac -d ../
+./bjmgr update solvedac --log ./log.txt -x cpp --code
+```
+
+</details>
+
+## Installation
+
+### Linux (Debian/Ubuntu)
+```bash
+sudo apt-get update
+sudo apt-get install -y build-essential cmake libcurl4-openssl-dev nlohmann-json3-dev
+git clone https://github.com/qluana7/bjmgr
+cd bjmgr
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
+```
+
+### macOS (Homebrew)
+```bash
+brew install cmake curl nlohmann-json
+git clone https://github.com/qluana7/bjmgr
+cd bjmgr
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
+# If packages are not found, try:
+cmake -S . -B build -DCMAKE_PREFIX_PATH="$(brew --prefix)"
+```
+
+### Windows
+- Recommended: MSYS2 or WSL for a Unix-like environment
+```bash
+git clone https://github.com/qluana7/bjmgr
+cd bjmgr
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
+```
+
+### Build-time option
+Disable ANSI colors:
+```bash
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DDISABLE_ANSI=ON
+cmake --build build --config Release
+```
+
+## Troubleshooting
+
+- Build cannot find libcurl or nlohmann_json  
+  - Ensure dev packages are installed (e.g., `libcurl4-openssl-dev`, `nlohmann-json3-dev`; `brew install curl nlohmann-json`)  
+  - Provide CMake hints:
+    ```bash
+    cmake -S . -B build -DCMAKE_PREFIX_PATH="$(brew --prefix)"
+    ```
+- HTTP/curl errors or 429 (Too Many Requests)  
+  - Check network connectivity; wait if 429 occurs
+- `less` not found  
+  - Install `less` or use `-y` to skip patch list viewing
+- `--code` does nothing  
+  - Ensure VS Code is installed and `code` CLI is in PATH
+- Inventory misses files  
+  - Current scanner counts `.cpp` only
+- ANSI colors look broken  
+  - Rebuild with `-DDISABLE_ANSI=ON`
+
+## Notes on Security and Portability
+
+- `system()` is used for optional `less` and `code` integrations.
+  - This is convenient but may affect portability/security. Use `--code` only if you trust your environment.
+- Network access is required for solved.ac API operations and is subject to rate limits/availability.
+- Color output uses ANSI sequences (can be disabled at build-time).
+
+## Roadmap
+
+- Replace or refactor `system()` calls to improve portability and security.
+- Support customizable directory structures (user-defined mapping).
+- Enhance editor integrations beyond VS Code.
+- Provide portable patch/diff viewing that does not depend on external tools.
+- Improve inventory scanning to include more file extensions.
+- Support for more programming languages beyond C++.
 
 ## Contributing
 
-Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+Issues and PRs are welcome. For major changes, please open an issue first to discuss your proposal.
 
 ## License
 
-This project is licensed under the MIT License.
+MIT — see [LICENSE](./LICENSE).
 
 ---
 
