@@ -165,10 +165,10 @@ struct tier_range {
 
             tier_t t1 = tier_t(s1), t2 = tier_t(s2);
 
-            valid = t1.valid() && t2.valid();
-
             if (!s1.empty()) start = (i32)t1;
             if (!s2.empty()) end = (i32)t2;
+
+            valid = start.valid() && end.valid();
         }
     }
 
