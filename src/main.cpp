@@ -522,6 +522,10 @@ void patch(const args& arg) {
             op = dir / fs::path(o.path()) / str,
             np = dir / fs::path(n.path()) / str;
         
+        if (!fs::exists(np.parent_path())) {
+            fs::create_directories(np.parent_path());
+        }
+
         std::error_code err;
         fs::rename(op, np, err);
         if (err) {
@@ -616,6 +620,11 @@ void new_file(const args& arg) {
     std::string fext = arg.options.count("extension") ? *arg.options.at("extension").value : "cpp";
     fs::path dir = arg.options.count("dir") ? fs::path(*arg.options.at("dir").value) : fs::path(".");
     fs::path p(dir / t.path() / (std::to_string(n) + "." + fext));
+
+    // 추가: 부모 디렉터리가 없으면 생성 (Bronze/Bronze 5 등)
+    if (!fs::exists(p.parent_path())) {
+        fs::create_directories(p.parent_path());
+    }
 
     std::cout << "\n";
 
