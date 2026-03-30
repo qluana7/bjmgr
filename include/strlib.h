@@ -6,6 +6,7 @@
 #include <sstream>
 #include <functional>
 #include <type_traits>
+#include <algorithm>
 
 #include <cstddef>
 
