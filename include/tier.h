@@ -17,6 +17,8 @@ struct tier_t {
         set_tier("BSGPDR"[(n - 1) / 5]); set_level(5 - (n - 1) % 5);
     }
     tier_t(const std::string& s) {
+        if (s.size() < 2) { tier = '\0', level = 0; return; }
+        
         set_tier(std::toupper(s[0])); set_level(s.back() - '0');
     }
 
