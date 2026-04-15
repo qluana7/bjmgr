@@ -2,6 +2,15 @@
 
 Baekjoon source code manager with solved.ac tier
 
+---
+
+# This project is archived.
+As Baekjoon online judge service ends, we decided to archive this project.
+
+Thanks for baekjoon and shiftpsh to service BOJ and solved.ac
+
+---
+
 - Language: C++17 · Build: CMake · License: MIT  
 - Integrations: solved.ac API v3, libcurl, nlohmann_json  
 - Optional: less, Visual Studio Code (`code` CLI)
